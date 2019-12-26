@@ -37,12 +37,12 @@ def bangumi():
     signature = base64.b64encode(hash)
 
     reply_url = "https://api.line.me/v2/bot/message/reply"
-    reply = i["events"][0]["replyToken"]
     header = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + "{" + line_bot_token + "}",
     }
     i = eval(body) #转换信息为字典
+    reply = i["events"][0]["replyToken"]
     if number[0] > 0:
         if i["events"][0]["message"]["type"] == "image":
             c = number[0] - 1  # 每发送一张图片 计数器-1
@@ -55,7 +55,7 @@ def bangumi():
                     fd.write(chunk)
             images_url = domain + image_id + ".jpg"
             trace_url = trace_moe_url + images_url
-            requests.post(url=reply_url, data=json.dumps(tra_bangumi(trace_url,reply)), headers=header)
+            requests.post(url=reply_url, data=json.dumps(tra_bangumi(trace_url,reply,number)), headers=header)
     elif number[0] == 0:
         vaule = "今日机器人搜索次数已达上限 请于24小时后再进行搜索"
         huifu = {

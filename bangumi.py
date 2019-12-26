@@ -1,7 +1,7 @@
 import trace_bangumi
 import requests
 
-def tra_bangumi(trace_url,reply_Token):
+def tra_bangumi(trace_url,reply_Token,number):
     response = requests.get(trace_url)  # 获取trace.moe的返回信息
     response.encoding = 'utf-8'  # 把trace.moe的返回信息转码成utf-8
     result = response.json()  # 转换成dict格式
@@ -20,7 +20,8 @@ def tra_bangumi(trace_url,reply_Token):
             "text": "番剧名称：" + animename + " 第" + str(episode) + "集" + '\n'
                      "相似度：" + str(similarity * 100).split('.')[0] + decimal + "%" + '\n'
                     + "时间：" + str(time / 60).split('.')[0]
-                    + '分' + str(time % 60).split('.')[0] + "秒"
+                    + '分' + str(time % 60).split('.')[0] + "秒" + '\n' +
+                    "本机器人今日剩余搜索次数" + str(number)
         }]
     }
     return huifu
