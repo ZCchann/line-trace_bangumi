@@ -6,6 +6,11 @@ import base64
 import hashlib
 import hmac
 from linebot import LineBotApi
+from bangumi import tra_bangumi
+import logging
+
+#设置日志
+logging.basicConfig(filename="./trace.log",format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 #读取json文件内的参数
 set = open("config.json",encoding='utf-8')
@@ -19,6 +24,8 @@ line_bot_api = LineBotApi(line_bot)
 app = Flask(__name__)
 line_bot_token = line_bot
 
+number = [130] #trace.moe每24小时搜索上限 默认上限为150 除非你是开发者 建议设置150以内
+
 @app.route("/trace_bangumi", methods=['POST'])
 def bangumi():
     #验证部分
@@ -28,42 +35,34 @@ def bangumi():
     hash = hmac.new(channel_secret.encode('utf-8'),
                     body.encode('utf-8'), hashlib.sha256).digest()
     signature = base64.b64encode(hash)
+
+    reply_url = "https://api.line.me/v2/bot/message/reply"
+    reply = i["events"][0]["replyToken"]
+    header = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + "{" + line_bot_token + "}",
+    }
     i = eval(body) #转换信息为字典
-
-    if i["events"][0]["message"]["type"] == "image":
-        image_id = i["events"][0]["message"]["id"]
-
-        message_content = line_bot_api.get_message_content(image_id) #从line服务器下载图片到本地服务器
-        with open("/data/images/"+ image_id + ".jpg", 'wb') as fd:
-            for chunk in message_content.iter_content():
-                fd.write(chunk)
-        images_url = domain + image_id + ".jpg"
-        trace_url = trace_moe_url + images_url
-        response = requests.get(trace_url)  # 获取trace.moe的返回信息
-        response.encoding = 'utf-8'  # 把trace.moe的返回信息转码成utf-8
-        result = response.json()  # 转换成dict格式
-        animename = result["docs"][0]["title_chinese"]  # 切片番剧名称
-        similarity = result["docs"][0]["similarity"]  # 切片相似度
-        time = result["docs"][0]["at"]  # 切片时间
-        episode = result["docs"][0]["episode"]  # 切片集数
-        try:
-            decimal = "." + str(similarity * 100).split('.')[1][:2]   #切片小数点后的内容 如果为空则不返回
-        except IndexError:
-            decimal = ""
-        reply_url = "https://api.line.me/v2/bot/message/reply"
-        reply = i["events"][0]["replyToken"]
-        header = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + "{" + line_bot_token + "}",
-        }
+    if number[0] > 0:
+        if i["events"][0]["message"]["type"] == "image":
+            c = number[0] - 1  # 每发送一张图片 计数器-1
+            number.clear()
+            number.append(c)
+            image_id = i["events"][0]["message"]["id"]
+            message_content = line_bot_api.get_message_content(image_id) #从line服务器下载图片到本地服务器
+            with open("/data/images/"+ image_id + ".jpg", 'wb') as fd:
+                for chunk in message_content.iter_content():
+                    fd.write(chunk)
+            images_url = domain + image_id + ".jpg"
+            trace_url = trace_moe_url + images_url
+            requests.post(url=reply_url, data=json.dumps(tra_bangumi(trace_url,reply)), headers=header)
+    elif number[0] == 0:
+        vaule = "今日机器人搜索次数已达上限 请于24小时后再进行搜索"
         huifu = {
             "replyToken": reply,
             "messages": [{
                 "type": "text",
-                "text": "番剧名称：" + animename + " 第" + str(episode) + "集" + '\n'
-                         "相似度：" + str(similarity * 100).split('.')[0] + decimal + "%"+  '\n'
-                          + "时间：" + str(time / 60).split('.')[0] 
-                         + '分' + str(time % 60).split('.')[0] + "秒"
+                "text": vaule
             }]
         }
         requests.post(url=reply_url, data=json.dumps(huifu), headers=header)
