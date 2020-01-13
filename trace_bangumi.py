@@ -10,7 +10,7 @@ from bangumi import tra_bangumi
 import logging
 
 #设置日志
-logging.basicConfig(filename="./trace.log",format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename="var/app.log",format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 #读取json文件内的参数
 set = open("config.json",encoding='utf-8')

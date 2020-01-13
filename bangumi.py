@@ -1,4 +1,3 @@
-import trace_bangumi
 import requests
 
 def tra_bangumi(trace_url,reply_Token,number):
