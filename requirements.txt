@@ -10,5 +10,5 @@ jinja2==2.10.3
 line-bot-sdk==1.15.0
 markupsafe==1.1.1
 requests==2.22.0
-urllib3==1.25.7
+urllib3==1.26.5
 werkzeug==0.16.0
